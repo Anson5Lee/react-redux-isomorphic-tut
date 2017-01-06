@@ -1,4 +1,4 @@
-import { createStore as _createStore, applyMiddleware } from 'redux';
+import { createStore as _createStore, applyMiddleware, compose } from 'redux';
 import { routerMiddleware } from 'react-router-redux';
 
 function createStoreWithReducer(history, data, reducer) {
@@ -8,7 +8,20 @@ function createStoreWithReducer(history, data, reducer) {
     reduxRouterMiddleware,
   ];
 
-  const finalCreateStore = applyMiddleware(...middleware)(_createStore);
+  // const finalCreateStore = applyMiddleware(...middleware)(_createStore);
+
+  let finalCreateStore;
+  if (process.env.NODE_ENV === 'development' && global.__CLIENT__ && global.__DEVTOOLS__) {
+    const { persistState } = require('redux-devtools');
+    const DevTools = require('../containers/DevTools');
+    finalCreateStore = compose(
+      applyMiddleware(...middleware),
+      global.devToolsExtension ? global.devToolsExtension() : DevTools.instrument(),
+      persistState(global.location.href.match(/[?&]debug_session=([^&]+)\b/))
+    )(_createStore);
+  } else {
+    finalCreateStore = applyMiddleware(...middleware)(_createStore);
+  }
 
   const store = finalCreateStore(reducer, data);
 

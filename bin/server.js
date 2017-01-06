@@ -16,6 +16,7 @@ import getRoutes from '../src/routes';
 import Default from '../src/layouts/Default';
 import { port, apiHost, apiPort } from '../config/env';
 
+global.__CLIENT__ = false; 
 const targetUrl = `http://${apiHost}:${apiPort}`;
 const pretty = new PrettyError();
 const app = express();

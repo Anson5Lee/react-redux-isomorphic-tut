@@ -9,11 +9,11 @@ import { match, RouterContext } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import createHistory from 'react-router/lib/createMemoryHistory';
 import { Provider } from 'react-redux';
-import { createStore } from '../src/redux/createStore';
+import {
+  createStore,
+} from '../src/redux/createStore';
 import getRoutes from '../src/routes';
 import Default from '../src/layouts/Default';
-import logger from 'morgan';
-
 import { port, apiHost, apiPort } from '../config/env';
 
 const targetUrl = `http://${apiHost}:${apiPort}`;
@@ -22,17 +22,13 @@ const app = express();
 const server = new http.Server(app);
 const proxy = httpProxy.createProxyServer({
   target: targetUrl,
-  ws: true
-})
-
-app.use('/', express.static(path.resolve(__dirname, '../public')));
-app.use(logger('combined'));
-app.use('/api', (req, res) => {
-  proxy.web(req, res, { target: `${targetUrl}/api` });
+  ws: true,
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello from server');
+app.use('/', express.static(path.resolve(__dirname, '../../public')));
+
+app.use('/api', (req, res) => {
+  proxy.web(req, res, { target: `${targetUrl}/api` });
 });
 
 server.on('upgrade', (req, socket, head) => {
@@ -62,9 +58,7 @@ app.use((req, res) => {
     res.send(`<!doctype html>${ReactDOM.renderToString(<Default store={store} />)}`);
   }
 
-})
-
-match({ history, routes: getRoutes(store), location: req.originalUrl },
+  match({ history, routes: getRoutes(store), location: req.originalUrl },
   (error, redirectLocation, renderProps) => {
     if (redirectLocation) {
       res.redirect(redirectLocation.pathname + redirectLocation.search);
@@ -78,8 +72,11 @@ match({ history, routes: getRoutes(store), location: req.originalUrl },
           <RouterContext {...renderProps} />
         </Provider>
       );
+
       res.status(200);
+
       global.navigator = { userAgent: req.headers['user-agent'] };
+
       res.send(`<!doctype html>${ReactDOM.renderToStaticMarkup(<Default component={component} store={store} />)}`);
     } else {
       res.status(404).send('Not found');
